@@ -2,8 +2,11 @@
 
 <?php
 //1.データベースに接続する
+
+//3.取得したareasテーブルの情報を表示
+
   $dsn = 'mysql:dbname=myfriends;host=localhost';   //同じサーバに入っていたらlocalhost
-  $user = 'root';   //xampで決まってる
+  $user = 'root';   //xampで決まってる　userという変数を作成してrootっていう文字を入れてます。
   $password='';     //xampで決まってる
   // $dsn = 'mysql:dbname=LAA0792978-onelinebbs;host=mysql102.phy.lolipop.lan';   //同じサーバに入っていたらlocalhost
   // $user = 'LAA0792978';
@@ -11,26 +14,44 @@
   $dbh = new PDO($dsn, $user, $password);
   $dbh->query('SET NAMES utf8');    //これがないと文字化けしちゃうよ！
 
-  // ２．SQL文を実行する
+  //2.DBからareasテーブルの情報を取得
     $sql = 'SELECT * FROM `areas` order by area_id ASC';
+  //DB名、テーブル名、カラム名はアクサングラーブで囲う　shift+@で表示できる。
+  //SQL文の中では省略可
+
     var_dump($sql);
-    // SQLを実行
+
+  // SQLを実行 実行するにはこの２行が必要
     $stmt = $dbh->prepare($sql);
     $stmt->execute();
 
-    //格納する変数の初期化
-    $areas = array();
+    //$recordデータ格納用の配列（変数名はなんでもいい）
+    //空のタンスを作る
 
-    // データを取得する
+    $hogehoge = array();
+
+    // 取得したareasテーブルの情報を表示
     while (1) {
-      $rec = $stmt->fetch(PDO::FETCH_ASSOC);
-      if ($rec == false) {
-        break;
-      }
-      
+      //カッコの中がtrueの限りずっと処理を続ける。1はtrue
+      //$recordはareasテーブルのレコード1件を格納した連想配列
+      //$record = array('area_id' => 2, 'area_name' => '青森県');
+      //別の配列データにそれぞれを格納してあげる。
+        $record = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($record == false) {
+          break;
+        }
+    
+
       //取得したデータを配列に格納しておく
-      $areas[] = $rec;
+      $hogehoge[] = $record;
+
+      //var_dump($hogehoge);
     }
+
+    // echo '<br>';
+    // echo '<br>';
+    // echo '<br>';
+    // echo count($hogehoge); //hogehoegの中にどれだけデータが入っていたか
   
  // ３．データベースを切断する
   $dbh = null;
@@ -96,17 +117,28 @@
           </thead>
           <tbody>
                 <!-- id, 県名を表示 -->
-          <?php 
-            foreach ($areas as $area_each) {   
+        <!--カッコを使う書き方-->
+        <?php   {   ?>
+        <?php } ?>
 
-              ?>
+        <!---カッコを使わない書き方-->
+        <?php foreach ($hogehoge as $area_each) : ?>  
+        <!-- $ area = arry('area_id'=>1, 'area_name'=>'北海道');--> 
                 <tr>
                   <td><div class="text-center"><?php echo ($area_each['area_id']); ?></div></td>
-                  <td><div class="text-center"><a href="show.php"><?php echo ($area_each['area_name']); ?></a></div></td>
+                  <td>
+                    <div class="text-center">
+                      <a href="show.php">
+                        <?php echo ($area_each['area_name']); ?>
+                      </a>
+                    </div>
+                  </td>
                   <td><div class="text-center">3</div></td>
                 </tr>
 
-          <?php } ?>
+          <?php endforeach; ?>
+
+
 
           </tbody>
         </table>

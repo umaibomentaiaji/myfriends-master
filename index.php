@@ -15,11 +15,14 @@
   $dbh->query('SET NAMES utf8');    //これがないと文字化けしちゃうよ！
 
   //2.DBからareasテーブルの情報を取得
-    $sql = 'SELECT * FROM `areas` order by area_id ASC';
+    // $sql = 'SELECT * FROM `areas` order by area_id ASC';
+
+ $sql = 'SELECT `areas`.`area_id`, `areas`.`area_name`, COUNT(`friends`.`friend_id`) AS friends_cnt FROM `areas` LEFT JOIN `friends` ON `areas`.`area_id` = `friends`.`area_id` GROUP BY `areas`.`area_id`, `areas`.`area_name`  ORDER BY `areas`.`area_id`';
+
   //DB名、テーブル名、カラム名はアクサングラーブで囲う　shift+@で表示できる。
   //SQL文の中では省略可
 
-    var_dump($sql);
+  //var_dump($sql);
 
   // SQLを実行 実行するにはこの２行が必要
     $stmt = $dbh->prepare($sql);
@@ -52,7 +55,20 @@
     // echo '<br>';
     // echo '<br>';
     // echo count($hogehoge); //hogehoegの中にどれだけデータが入っていたか
-  
+
+
+// $sql = 'SELECT COUNT(`friend_id`) AS friends_cnt FROM `friends` WHERE `area_id` = 1';
+// $stmt = $dbh->prepare($sql);
+// $stmt-> execute();
+// $record = $stmt->fetch(PDO::FETCH_ASSOC);
+// echo'<br>';
+// echo '<pre>';
+// var_dump($record);
+// echo'</pre>';
+// echo  $record["friends_cnt"];
+
+
+
  // ３．データベースを切断する
   $dbh = null;
 ?>
@@ -91,7 +107,7 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html"><span class="strong-title"><i class="fa fa-facebook-square"></i> My friends</span></a>
+              <a class="navbar-brand" href="index.php"><span class="strong-title"><i class="fa fa-facebook-square"></i> My friends</span></a>
           </div>
           <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -125,15 +141,15 @@
         <?php foreach ($hogehoge as $area_each) : ?>  
         <!-- $ area = arry('area_id'=>1, 'area_name'=>'北海道');--> 
                 <tr>
-                  <td><div class="text-center"><?php echo ($area_each['area_id']); ?></div></td>
+                  <td><div class="text-center"></div></td>
                   <td>
                     <div class="text-center">
-                      <a href="show.php">
+                      <a href="show.php?area_id=<?php echo $area_each['area_id'] ?>">
                         <?php echo ($area_each['area_name']); ?>
                       </a>
                     </div>
                   </td>
-                  <td><div class="text-center">3</div></td>
+                  <td><div class="text-center"><?php echo $area_each['friends_cnt']; ?></div></td>
                 </tr>
 
           <?php endforeach; ?>

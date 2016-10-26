@@ -1,3 +1,120 @@
+
+<?php 
+  //DBへの接続
+  
+  $dsn = 'mysql:dbname=myfriends;host=localhost';   //同じサーバに入っていたらlocalhost
+  $user = 'root';   //xampで決まってる　userという変数を作成してrootっていう文字を入れてます。
+  $password='';     //xampで決まってる
+  // $dsn = 'mysql:dbname=LAA0792978-onelinebbs;host=mysql102.phy.lolipop.lan';   //同じサーバに入っていたらlocalhost
+  // $user = 'LAA0792978';
+  // $password='urepamin1012';
+  $dbh = new PDO($dsn, $user, $password);
+  $dbh->query('SET NAMES utf8');    //これがないと文字化けしちゃうよ！
+
+
+  //削除処理　action = deleteがget送信で送られてきた時
+  if (!empty($_GET['action']) && !empty($_GET['friend_id']) && ($_GET['action'] == 'delete')){
+    $sql = 'DELETE FROM `friends` WHERE `friend_id`='.$_GET['friend_id'];
+  
+    //SELECT文実行
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute();
+
+    // //二重に実行されないように最初のURLにリダイレクト
+    // header('Location:index.php');
+    // exit;
+
+
+}
+
+
+  // if (!empty($_GET) && ($_GET['action'] == 'delete')){
+  //   //SQLのDELETE文
+  //   $sql = 'DELETE FROM `friends` WHERE `friend_id`='.$_GET['friend_id'];
+  
+  //   //SELECT文実行
+  //   $stmt = $dbh->prepare($sql);
+  //   $stmt->execute();
+
+  //   //二重に実行されないように最初のURLにリダイレクト
+  //   header('Location:index.php');
+  //   exit;
+
+  // }
+
+  //areasテーブルからパラメータのarea_id を使用してデータレコードを取得
+  //$GET = array('area_id'=>20);
+
+  $area_id = $_GET['area_id'];
+
+  //areasテーブルからareas
+  $sql = 'SELECT `area_name` FROM `areas` WHERE `area_id` = '. $area_id;
+
+  //var_dump($sql);
+
+  $stmt = $dbh->prepare($sql);
+  $stmt->execute();
+
+  //1レコード分しか取得しないのでfetchも1回でOK
+  $area = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  //友達データの取得をする
+  //friendsテーブルからデータを取得する
+  
+  $sql ='SELECT * FROM `friends` WHERE `area_id` = '. $area_id;
+  $stmt = $dbh->prepare($sql); 
+  $stmt->execute();
+
+  //object型のデータをArray型に変換する
+
+  $friends = array();
+
+  //男女カウント用の変数 必ずwhile文の外にかく while文の中に書くとリセットされてしまう。
+  //While文に何かを蓄えたい場合は必ずwhile文の外に書く
+  $male = 0;
+  $female = 0;
+
+
+  while(1){
+    //fetchする
+    $record = $stmt->fetch(PDO::FETCH_ASSOC);
+    //空だったらbreak
+    if($record == false){
+      break;
+    }
+    //$friends配列に値を代入する
+    $friends[] = $record;
+
+    //男女のカウントプログラム
+    if($record['gender'] == 0){  //$recordのgenderが入っているところを見に行って、その友達が男だったら
+      $male++; //自己代入文
+      //$male = $male + 1;
+    }elseif ($record['gender'] == 1) { //その友達が女だったら
+      $female++;
+    }
+  }
+
+ 
+
+// echo '<pre>';
+// var_dump($friends);
+// echo '</pre>';
+
+//HTMLと連携して表示する
+
+  echo '<br>';
+  echo '<br>';
+  //var_dump($area);
+
+  // echo $male;
+  // echo '<br>';
+  // echo $female;
+
+ ?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -33,7 +150,7 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html"><span class="strong-title"><i class="fa fa-facebook-square"></i> My friends</span></a>
+              <a class="navbar-brand" href="index.php"><span class="strong-title"><i class="fa fa-facebook-square"></i> My friends</span></a>
           </div>
           <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -48,8 +165,11 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4 content-margin-top">
-      <legend>北海道の友達</legend>
-      <div class="well">男性：2名　女性：1名</div>
+
+      <legend><?php echo $area['area_name']; ?>の友達</legend>
+
+
+      <div class="well">男性：<?php echo $male; ?>　女性：<?php echo $female; ?></div>
         <table class="table table-striped table-hover table-condensed">
           <thead>
             <tr>
@@ -59,37 +179,23 @@
           </thead>
           <tbody>
             <!-- 友達の名前を表示 -->
+        <?php foreach ($friends as $friend_each) : ?>　<!-- 始まりはセミコロン -->  
             <tr>
-              <td><div class="text-center">山田　太郎</div></td>
+              <td><div class="text-center"><?php echo $friend_each['friend_name']; ?></div></td>
               <td>
                 <div class="text-center">
-                  <a href="edit.html"><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;
-                  <a href="javascript:void(0);" onclick="destroy();"><i class="fa fa-trash"></i></a>
+                   <a href="edit.php?friend_id=<?php echo $friend_each['friend_id'] ?>"><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;
+                   <a href="javascript:void(0);" onclick="destroy();"><i class="fa fa-trash"></i></a>
+                  <!--a href="show.php?friend_id=<?php echo $friend_each['friend_id'] ?>&action=delete"><i class="fa fa-trash"></i></a-->
+                  
                 </div>
               </td>
             </tr>
-            <tr>
-              <td><div class="text-center">小林　花子</div></td>
-              <td>
-                <div class="text-center">
-                  <a href="edit.html"><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;
-                  <a href="javascript:void(0);" onclick="destroy();"><i class="fa fa-trash"></i></a>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td><div class="text-center">佐藤　健</div></td>
-              <td>
-                <div class="text-center">
-                  <a href="edit.html"><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;
-                  <a href="javascript:void(0);" onclick="destroy();"><i class="fa fa-trash"></i></a>
-                </div>
-              </td>
-            </tr>
+        <?php endforeach; ?> <!-- 終わりはコロン -->
+          
           </tbody>
         </table>
-
-        <input type="button" class="btn btn-default" value="新規作成" onClick="location.href='new.html'">
+        <input type="button" class="btn btn-default" value="新規作成" onClick="location.href='new.php'">
       </div>
     </div>
   </div>
@@ -97,5 +203,17 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+
+    <script>
+    function destroy() {
+    // ポップアップを表示
+    if (window.confirm('マジで削除してもいいのん？後悔セーへん？')){
+      location.href = "show.php?friend_id=<?php echo $friend_each['friend_id'] ?>&action=delete";
+      }else{
+      window.aleart('キャンセルされました');
+      }
+    }
+    </script>
+
   </body>
 </html>
